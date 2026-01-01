@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Firebase credentials
+serviceAccountKey.json
+
+# Uploads directory
+uploads/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
