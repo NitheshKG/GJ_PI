@@ -70,7 +70,7 @@ const formatDate = (dateString) => {
         <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2 md:grid-cols-3">
           <div>
             <dt class="text-sm font-medium text-gray-500">Customer Name</dt>
-            <dd class="mt-1 text-sm font-bold text-gray-900">{{ ticket.name }}</dd>
+            <dd class="mt-1 text-sm font-bold text-gray-900">{{ ticket.customerName }}</dd>
           </div>
           <div>
             <dt class="text-sm font-medium text-gray-500">Item</dt>
@@ -144,13 +144,7 @@ const formatDate = (dateString) => {
                   Interest Paid
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Interest Received At
-                </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Principal Paid
-                </th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Principal Received At
                 </th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Remaining Principal
@@ -168,14 +162,8 @@ const formatDate = (dateString) => {
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
                   {{ payment.interestPaid > 0 ? `₹${payment.interestPaid.toLocaleString()}` : '-' }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ formatDateTime(payment.interestReceivedAt) }}
-                </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                   {{ payment.principalPaid > 0 ? `₹${payment.principalPaid.toLocaleString()}` : '-' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {{ formatDateTime(payment.principalReceivedAt) }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                   ₹{{ payment.remainingPrincipal?.toLocaleString() || 0 }}

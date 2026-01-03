@@ -1,15 +1,21 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useNotificationStore } from '../stores/notificationStore'
 import axios from 'axios'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
+const notificationStore = useNotificationStore()
 
 const customer = ref(null)
 const tickets = ref([])
 const loading = ref(false)
 const showEditModal = ref(false)
+const showConfirmDialog = ref(false)
+const selectedTicketId = ref(null)
+const selectedTicketName = ref('')
 const editForm = ref({
   name: '',
   phone: '',
@@ -68,6 +74,32 @@ const recordPayment = (ticketId) => {
 
 const viewPayments = (ticketId) => {
   router.push(`/tickets/${ticketId}/payments`)
+}
+
+const calculatePendingMonths = (ticket) => {
+  const totalElapsedMonths = ticket.interestPendingMonths || 0
+  const receivedMonths = ticket.interestReceivedMonths || 0
+  return Math.max(0, totalElapsedMonths - receivedMonths)
+}
+
+const canCloseTicket = (ticket) => {
+  return calculatePendingMonths(ticket) === 0 && ticket.pendingPrincipal === 0
+}
+
+const openCloseDialog = (ticket) => {
+  selectedTicketId.value = ticket.id
+  selectedTicketName.value = ticket.articleName
+  showConfirmDialog.value = true
+}
+
+const closeTicket = async () => {
+  try {
+    await axios.put(`http://localhost:5000/api/tickets/${selectedTicketId.value}/close`)
+    notificationStore.addNotification('Ticket closed successfully!', 'success', 3000)
+    await fetchTickets() // Refresh tickets list
+  } catch (error) {
+    notificationStore.addNotification('Failed to close ticket', 'error', 3000)
+  }
 }
 
 const openEditModal = () => {
@@ -219,7 +251,13 @@ const updateCustomer = async () => {
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
                 <button
                   @click="recordPayment(ticket.id)"
-                  class="text-green-600 hover:text-green-900 font-semibold"
+                  :disabled="ticket.status === 'Closed'"
+                  :class="[
+                    'font-semibold',
+                    ticket.status === 'Closed' 
+                      ? 'text-gray-400 cursor-not-allowed' 
+                      : 'text-green-600 hover:text-green-900'
+                  ]"
                 >
                   Record Payment
                 </button>
@@ -229,6 +267,13 @@ const updateCustomer = async () => {
                   class="text-blue-600 hover:text-blue-900"
                 >
                   View Payments
+                </button>
+                <button 
+                  v-if="canCloseTicket(ticket) && ticket.status === 'Active'"
+                  @click="openCloseDialog(ticket)" 
+                  class="text-red-600 hover:text-red-900 font-semibold ml-3"
+                >
+                  Close Ticket
                 </button>
               </td>
             </tr>
@@ -307,4 +352,14 @@ const updateCustomer = async () => {
       </div>
     </div>
   </div>
+  
+  <!-- Confirmation Dialog -->
+  <ConfirmDialog
+    v-model:show="showConfirmDialog"
+    title="Close Ticket"
+    :message="`Are you sure you want to close the ticket for ${selectedTicketName}? This action cannot be undone.`"
+    confirmText="Yes, Close Ticket"
+    cancelText="Cancel"
+    @confirm="closeTicket"
+  />
 </template>

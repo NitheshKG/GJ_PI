@@ -10,8 +10,12 @@ const notificationStore = useNotificationStore()
 const router = useRouter()
 
 const customers = ref([])
+const filteredCustomers = ref([])
+const customerSearchQuery = ref('')
 const showNewCustomerForm = ref(false)
 const selectedCustomerId = ref('')
+const isDropdownOpen = ref(false)
+const dropdownRef = ref(null)
 
 const indianStates = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", 
@@ -47,15 +51,43 @@ const ticketForm = ref({
 
 onMounted(async () => {
   await fetchCustomers()
+  // Add event listener to close dropdown when clicking outside
+  document.addEventListener('click', handleClickOutside)
 })
+
+const handleClickOutside = (event) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+    isDropdownOpen.value = false
+  }
+}
 
 const fetchCustomers = async () => {
   try {
     const response = await axios.get('http://localhost:5000/api/customers')
     customers.value = response.data
+    filteredCustomers.value = response.data
   } catch (error) {
     console.error('Failed to fetch customers:', error)
   }
+}
+
+const filterCustomers = () => {
+  const query = customerSearchQuery.value.toLowerCase().trim()
+  if (!query) {
+    filteredCustomers.value = customers.value
+  } else {
+    filteredCustomers.value = customers.value.filter(customer => 
+      customer.name.toLowerCase().includes(query) || 
+      customer.phone.includes(query)
+    )
+  }
+}
+
+const selectCustomer = (customerId) => {
+  selectedCustomerId.value = customerId
+  isDropdownOpen.value = false
+  customerSearchQuery.value = ''
+  filterCustomers()
 }
 
 const submitForm = async () => {
@@ -174,20 +206,58 @@ const submitForm = async () => {
 
           <!-- Customer Forms with Smooth Transitions -->
           <div class="mt-4">
-            <!-- Existing Customer Selection -->
+            <!-- Existing Customer Selection with Search -->
             <transition name="fade-slide">
               <div v-if="!showNewCustomerForm" class="bg-gray-50 rounded-xl p-4 border border-gray-200">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Select Customer</label>
-                <select
-                  v-model="selectedCustomerId"
-                  required
-                  class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 sm:text-sm p-2 border transition-all duration-200"
-                >
-                  <option value="">-- Choose a customer --</option>
-                  <option v-for="customer in customers" :key="customer.id" :value="customer.id">
-                    {{ customer.name }} - {{ customer.phone }}
-                  </option>
-                </select>
+                <div class="relative" ref="dropdownRef">
+                  <div class="flex items-center">
+                    <input
+                      type="text"
+                      v-model="customerSearchQuery"
+                      @input="filterCustomers"
+                      @focus="isDropdownOpen = true"
+                      @click="isDropdownOpen = true"
+                      :placeholder="selectedCustomerId ? 'Search customers...' : '-- Choose a customer --'"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 sm:text-sm p-2 border transition-all duration-200"
+                    >
+                    <svg v-if="!isDropdownOpen" class="absolute right-3 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                    </svg>
+                    <svg v-else class="absolute right-3 w-4 h-4 text-indigo-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7 7 7"></path>
+                    </svg>
+                  </div>
+                  
+                  <!-- Dropdown Menu -->
+                  <div
+                    v-if="isDropdownOpen"
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+                  >
+                    <div v-if="filteredCustomers.length === 0" class="p-4 text-center text-gray-500 text-sm">
+                      {{ customerSearchQuery ? 'No customers found' : 'No customers available' }}
+                    </div>
+                    <div v-else class="py-1">
+                      <button
+                        v-for="customer in filteredCustomers"
+                        :key="customer.id"
+                        type="button"
+                        @click="selectCustomer(customer.id)"
+                        class="w-full text-left px-4 py-2 hover:bg-indigo-100 transition-colors duration-150 focus:outline-none focus:bg-indigo-100"
+                      >
+                        <div class="font-medium text-gray-900">{{ customer.name }}</div>
+                        <div class="text-sm text-gray-500">{{ customer.phone }}</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Show selected customer -->
+                  <div v-if="selectedCustomerId && !isDropdownOpen" class="mt-2 p-2 bg-indigo-50 border border-indigo-200 rounded-lg">
+                    <p class="text-sm text-indigo-900 font-medium">
+                      Selected: {{ customers.find(c => c.id === selectedCustomerId)?.name }} ({{ customers.find(c => c.id === selectedCustomerId)?.phone }})
+                    </p>
+                  </div>
+                </div>
               </div>
             </transition>
 

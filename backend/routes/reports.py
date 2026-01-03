@@ -88,7 +88,7 @@ def outstanding_loans_report():
             if pending_principal > 0:
                 outstanding_tickets.append({
                     'id': doc.id,
-                    'name': ticket.get('name'),
+                    'name': ticket.get('customerName'),
                     'articleName': ticket.get('articleName'),
                     'principal': ticket.get('principal'),
                     'pendingPrincipal': pending_principal,
@@ -99,6 +99,7 @@ def outstanding_loans_report():
         
         return jsonify({
             'totalOutstanding': total_outstanding,
+            'ticketCount': len(outstanding_tickets),
             'tickets': outstanding_tickets
         }), 200
         

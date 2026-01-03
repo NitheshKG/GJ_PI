@@ -149,7 +149,8 @@ const totalPrincipalInvested = computed(() => {
 
 const totalInterestEarned = computed(() => {
   // Always show all-time data regardless of filter
-  return allTickets.value.reduce((sum, ticket) => sum + (ticket.totalInterestReceived || 0), 0)
+  // Sum all interest paid from payments collection for accurate total
+  return allPayments.value.reduce((sum, payment) => sum + (payment.interestPaid || 0), 0)
 })
 
 const activeTicketsCount = computed(() => {

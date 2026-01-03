@@ -1,6 +1,18 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
 import ToastNotification from './components/ToastNotification.vue'
+import { useAuthStore } from './stores/authStore'
+import { ref } from 'vue'
+
+const router = useRouter()
+const authStore = useAuthStore()
+const showUserMenu = ref(false)
+
+const handleLogout = async () => {
+  await authStore.logout()
+  showUserMenu.value = false
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -12,16 +24,54 @@ import ToastNotification from './components/ToastNotification.vue'
             <div class="flex-shrink-0 flex items-center">
               <h1 class="text-xl font-bold text-gray-800">Gunaa Jewells</h1>
             </div>
-            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <div v-if="authStore.isAuthenticated" class="hidden sm:ml-6 sm:flex sm:space-x-8">
               <RouterLink to="/" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                 Dashboard
               </RouterLink>
               <RouterLink to="/customers" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                 Customers
               </RouterLink>
+              <RouterLink to="/alerts" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium flex items-center gap-1">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M13.477 14.89A6 6 0 0 1 5.11 6.623a6 6 0 0 1 8.367 8.267ZM9 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" />
+                </svg>
+                Alerts
+              </RouterLink>
               <RouterLink to="/reports" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                 Reports
               </RouterLink>
+            </div>
+          </div>
+          
+          <!-- User Menu -->
+          <div v-if="authStore.isAuthenticated" class="flex items-center">
+            <div class="relative">
+              <button
+                @click="showUserMenu = !showUserMenu"
+                class="flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                <div class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-medium">
+                  {{ authStore.user?.name?.charAt(0).toUpperCase() || 'U' }}
+                </div>
+              </button>
+              
+              <!-- Dropdown Menu -->
+              <div
+                v-if="showUserMenu"
+                @click.outside="showUserMenu = false"
+                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50"
+              >
+                <div class="px-4 py-3 border-b border-gray-200">
+                  <p class="text-sm font-medium text-gray-900">{{ authStore.user?.name }}</p>
+                  <p class="text-xs text-gray-500">{{ authStore.user?.email }}</p>
+                </div>
+                <button
+                  @click="handleLogout"
+                  class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>

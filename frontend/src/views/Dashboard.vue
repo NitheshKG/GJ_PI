@@ -265,19 +265,36 @@ const goToPage = (page) => {
             Next
           </button>
         </div>
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p class="text-sm text-gray-700">
-              Showing
-              <span class="font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
-              to
-              <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, ticketStore.tickets.length) }}</span>
-              of
-              <span class="font-medium">{{ ticketStore.tickets.length }}</span>
-              tickets
-            </p>
+        <div class="hidden sm:flex sm:w-full sm:items-center sm:justify-between gap-8">
+          <div class="flex items-center space-x-4">
+            <div>
+              <p class="text-sm text-gray-700">
+                Showing
+                <span class="font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
+                to
+                <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, ticketStore.tickets.length) }}</span>
+                of
+                <span class="font-medium">{{ ticketStore.tickets.length }}</span>
+                tickets
+              </p>
+            </div>
+            <div class="border-l border-gray-300 pl-4">
+              <label for="items-per-page" class="block text-sm font-medium text-gray-700 mb-1">
+                Tickets per page:
+              </label>
+              <select
+                id="items-per-page"
+                v-model.number="itemsPerPage"
+                @change="currentPage = 1"
+                class="block w-20 px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              >
+                <option :value="10">10</option>
+                <option :value="50">50</option>
+                <option :value="100">100</option>
+              </select>
+            </div>
           </div>
-          <div>
+          <div class="flex-shrink-0">
             <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
               <!-- Previous Button -->
               <button

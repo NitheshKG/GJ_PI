@@ -4,6 +4,57 @@ from datetime import datetime
 
 tickets_bp = Blueprint('tickets', __name__, url_prefix='/api/tickets')
 
+def calculate_completed_months(start_date, end_date):
+    """
+    Calculate the number of complete months between two dates, including fractional months.
+    - 0-15 days = 0.5 months
+    - 16+ days = 1.0 month added
+    
+    Example:
+    - start: Nov 8, end: Nov 15 = 0.5 months (7 days)
+    - start: Nov 8, end: Nov 24 = 1.0 month (16 days)
+    - start: Nov 8, end: Dec 8 = 1.0 month (exactly 1 complete month)
+    - start: Nov 8, end: Dec 15 = 1.5 months (1 month + 7 days)
+    - start: Nov 8, end: Dec 24 = 2.0 months (1 month + 16 days)
+    """
+    # Calculate raw month difference
+    months_diff = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
+    
+    # Track the fractional part
+    fractional_months = 0.0
+    
+    # If we're in the same month, calculate based on days elapsed
+    if start_date.year == end_date.year and start_date.month == end_date.month:
+        days_elapsed = (end_date - start_date).days
+        if days_elapsed > 0 and days_elapsed <= 15:
+            fractional_months = 0.5
+        elif days_elapsed > 15:
+            fractional_months = 1.0
+        return max(0, fractional_months)
+    
+    # If the day of end_date is less than day of start_date
+    if end_date.day < start_date.day:
+        # We haven't completed this month yet
+        months_diff -= 1
+        # Calculate fractional part based on days in current month
+        days_into_month = end_date.day
+        if days_into_month > 0 and days_into_month <= 15:
+            fractional_months = 0.5
+        elif days_into_month > 15:
+            fractional_months = 1.0
+    else:
+        # We have completed this month
+        # Calculate days into the current month (after the start day)
+        days_into_month = end_date.day - start_date.day
+        if days_into_month > 0 and days_into_month <= 15:
+            fractional_months = 0.5
+        elif days_into_month > 15:
+            fractional_months = 1.0
+    
+    # Combine complete months with fractional months
+    total_months = max(0, months_diff) + fractional_months
+    return round(total_months, 1)  # Round to 1 decimal place
+
 @tickets_bp.route('', methods=['POST'])
 def create_ticket():
     try:
@@ -137,8 +188,9 @@ def get_tickets():
                         # Simple date format (YYYY-MM-DD)
                         start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
                     
-                    months_diff = (current_date.year - start_date.year) * 12 + (current_date.month - start_date.month)
-                    ticket['interestPendingMonths'] = max(0, months_diff)
+                    # Use the new calculation that considers the day component
+                    completed_months = calculate_completed_months(start_date, current_date)
+                    ticket['interestPendingMonths'] = completed_months
                 except Exception as e:
                     print(f"Error parsing date {start_date_str}: {e}")
                     ticket['interestPendingMonths'] = 0
@@ -178,8 +230,9 @@ def get_ticket(ticket_id):
                         # Simple date format (YYYY-MM-DD)
                         start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
                     
-                    months_diff = (current_date.year - start_date.year) * 12 + (current_date.month - start_date.month)
-                    ticket['interestPendingMonths'] = max(0, months_diff)
+                    # Use the new calculation that considers the day component
+                    completed_months = calculate_completed_months(start_date, current_date)
+                    ticket['interestPendingMonths'] = completed_months
                 except Exception as e:
                     print(f"Error parsing date {start_date_str}: {e}")
                     ticket['interestPendingMonths'] = 0

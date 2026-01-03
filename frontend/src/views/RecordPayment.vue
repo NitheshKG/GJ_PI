@@ -33,11 +33,9 @@ const interestPendingMonths = computed(() => {
   return Math.max(0, totalElapsed - received)
 })
 
-// Check if principal payment is allowed
+// Principal payment is always allowed
 const canPayPrincipal = computed(() => {
-  // Allow if no interest is pending OR if the user is paying enough months to cover pending interest
-  const pendingAfterPayment = Math.max(0, interestPendingMonths.value - (form.value.monthsPaid || 0))
-  return pendingAfterPayment === 0
+  return true
 })
 
 // Auto-calculate interest based on pending principal, interest percentage, and months
