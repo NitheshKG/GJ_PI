@@ -31,10 +31,7 @@ const handleLogout = async () => {
               <RouterLink to="/customers" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                 Customers
               </RouterLink>
-              <RouterLink to="/alerts" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium flex items-center gap-1">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M13.477 14.89A6 6 0 0 1 5.11 6.623a6 6 0 0 1 8.367 8.267ZM9 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" />
-                </svg>
+              <RouterLink to="/alerts" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                 Alerts
               </RouterLink>
               <RouterLink to="/reports" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">

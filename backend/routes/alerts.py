@@ -155,6 +155,8 @@ def get_overdue_interests():
     Returns a list of customers with pending interest details.
     """
     try:
+        from routes.tickets import calculate_completed_months
+        
         db = get_db()
         tickets_ref = db.collection('tickets')
         docs = tickets_ref.stream()
@@ -174,13 +176,29 @@ def get_overdue_interests():
             if not start_date_str:
                 continue
             
-            start_date = parser.isoparse(start_date_str)
+            # Handle both date (YYYY-MM-DD) and datetime (ISO format) strings
+            try:
+                if 'T' in start_date_str:
+                    # ISO datetime format
+                    start_date = datetime.fromisoformat(start_date_str.replace('Z', '+00:00'))
+                else:
+                    # Simple date format (YYYY-MM-DD)
+                    start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+            except Exception as e:
+                print(f"Error parsing date {start_date_str}: {e}")
+                continue
             
-            # Calculate months passed since ticket was created
-            months_passed = (current_date.year - start_date.year) * 12 + (current_date.month - start_date.month)
+            # Calculate total elapsed months since ticket was created
+            completed_months = calculate_completed_months(start_date, current_date)
             
-            # If 12+ months have passed, add to overdue list
-            if months_passed >= 12:
+            # Get interest received months
+            interest_received_months = ticket.get('interestReceivedMonths', 0)
+            
+            # Calculate actual pending interest months
+            pending_interest_months = max(0, completed_months - interest_received_months)
+            
+            # If 12+ months of interest are pending, add to overdue list
+            if pending_interest_months >= 12:
                 # Check if this customer already exists in overdue_customers
                 customer_exists = False
                 for existing_customer in overdue_customers:
@@ -193,7 +211,8 @@ def get_overdue_interests():
                             'pendingPrincipal': ticket.get('pendingPrincipal'),
                             'interestPercentage': ticket.get('interestPercentage'),
                             'startDate': ticket.get('startDate'),
-                            'monthsPending': months_passed,
+                            'monthsPending': pending_interest_months,
+                            'interestReceivedMonths': interest_received_months,
                             'status': ticket.get('status')
                         })
                         customer_exists = True
@@ -214,7 +233,8 @@ def get_overdue_interests():
                             'pendingPrincipal': ticket.get('pendingPrincipal'),
                             'interestPercentage': ticket.get('interestPercentage'),
                             'startDate': ticket.get('startDate'),
-                            'monthsPending': months_passed,
+                            'monthsPending': pending_interest_months,
+                            'interestReceivedMonths': interest_received_months,
                             'status': ticket.get('status')
                         }]
                     })

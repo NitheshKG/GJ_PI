@@ -40,6 +40,7 @@ const customerForm = ref({
 })
 
 const ticketForm = ref({
+  billNumber: '',
   articleName: '',
   itemType: 'Silver',
   grossWeight: '',
@@ -405,6 +406,18 @@ const submitForm = async () => {
                   <span class="ml-2 text-gray-900 font-medium">Gold</span>
                 </label>
               </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">
+                Bill Number <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                v-model="ticketForm.billNumber"
+                required
+                placeholder="Enter bill number"
+                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 sm:text-sm p-2 border transition-all duration-200"
+              >
             </div>
             <div class="lg:col-span-2">
               <label class="block text-sm font-semibold text-gray-700 mb-1">

@@ -40,17 +40,50 @@ def get_customers():
         
         # Fetch all customers in a single query
         customers_ref = db.collection('customers')
-        docs = customers_ref.stream()
+        customers_docs = list(customers_ref.stream())
+        
+        # Fetch all tickets in a single query
+        tickets_ref = db.collection('tickets')
+        tickets_docs = list(tickets_ref.stream())
+        
+        # Build a map of customer stats from tickets
+        customer_stats = {}
+        for ticket_doc in tickets_docs:
+            ticket = ticket_doc.to_dict()
+            customer_id = ticket.get('customerId')
+            if not customer_id:
+                continue
+            
+            if customer_id not in customer_stats:
+                customer_stats[customer_id] = {
+                    'totalTickets': 0,
+                    'activeTickets': 0,
+                    'totalOutstanding': 0
+                }
+            
+            # Count all tickets
+            customer_stats[customer_id]['totalTickets'] += 1
+            
+            # Count only active tickets and their outstanding amounts
+            if ticket.get('status') == 'Active':
+                customer_stats[customer_id]['activeTickets'] += 1
+                pending_principal = ticket.get('pendingPrincipal', 0)
+                customer_stats[customer_id]['totalOutstanding'] += pending_principal
 
         customers = []
-        for doc in docs:
+        for doc in customers_docs:
             customer = doc.to_dict()
             customer['id'] = doc.id
             
-            # Use pre-stored stats (will be updated via migration and on ticket creation/updates)
-            customer['totalTickets'] = customer.get('totalTickets', 0)
-            customer['activeTickets'] = customer.get('activeTickets', 0)
-            customer['totalOutstanding'] = customer.get('totalOutstanding', 0)
+            # Use dynamically calculated stats from actual tickets
+            stats = customer_stats.get(doc.id, {
+                'totalTickets': 0,
+                'activeTickets': 0,
+                'totalOutstanding': 0
+            })
+            customer['totalTickets'] = stats['totalTickets']
+            customer['activeTickets'] = stats['activeTickets']
+            customer['totalOutstanding'] = stats['totalOutstanding']
 
             customers.append(customer)
 
@@ -97,6 +130,9 @@ def get_customer_tickets(customer_id):
             ticket['interestReceivedMonths'] = ticket.get('interestReceivedMonths', 0)
             
             tickets.append(ticket)
+        
+        # Sort tickets by lastPaymentDate (most recent first)
+        tickets.sort(key=lambda t: t.get('lastPaymentDate') or '1970-01-01', reverse=True)
             
         return jsonify(tickets), 200
         

@@ -140,6 +140,9 @@ const goToPage = (page) => {
                   Name
                 </th>
                 <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Bill Number
+                </th>
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Item
                 </th>
                 <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -180,6 +183,9 @@ const goToPage = (page) => {
                   >
                     {{ ticket.name }}
                   </router-link>
+                </td>
+                <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                  {{ ticket.billNumber || '-' }}
                 </td>
                 <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {{ ticket.articleName }}

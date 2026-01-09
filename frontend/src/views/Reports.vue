@@ -518,6 +518,7 @@ const exportOutstandingLoans = async () => {
             <table class="min-w-full divide-y divide-gray-300">
               <thead class="bg-gray-50">
                 <tr>
+                  <th class="px-2 sm:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bill Number</th>
                   <th class="px-2 sm:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                   <th class="px-2 sm:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Article</th>
                   <th class="px-2 sm:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Original Principal</th>
@@ -528,6 +529,7 @@ const exportOutstandingLoans = async () => {
               </thead>
               <tbody class="divide-y divide-gray-200 bg-white">
                 <tr v-for="ticket in outstandingLoans.tickets" :key="ticket.id">
+                  <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm font-semibold text-gray-900">{{ ticket.billNumber || '-' }}</td>
                   <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">{{ ticket.name }}</td>
                   <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">{{ ticket.articleName }}</td>
                   <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-900">

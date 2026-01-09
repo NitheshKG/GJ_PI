@@ -64,10 +64,10 @@
       </div>
 
       <!-- Tabs -->
-      <div class="border-b border-gray-200 mb-6">
+      <div class="border-b border-gray-200 mb-6 flex items-center justify-between">
         <div class="flex space-x-8">
           <button
-            @click="activeTab = 'customers'"
+            @click="switchTab('customers')"
             :class="[
               'px-4 py-2 font-medium border-b-2 transition-colors duration-200',
               activeTab === 'customers'
@@ -78,7 +78,7 @@
             Overdue Customers ({{ alertCount }})
           </button>
           <button
-            @click="activeTab = 'history'"
+            @click="switchTab('history')"
             :class="[
               'px-4 py-2 font-medium border-b-2 transition-colors duration-200',
               activeTab === 'history'
@@ -89,6 +89,16 @@
             Message History
           </button>
         </div>
+        <button
+          @click="refreshData"
+          :disabled="loading || loadingHistory"
+          class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg class="w-4 h-4" :class="{ 'animate-spin': loading || loadingHistory }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh
+        </button>
       </div>
 
       <!-- Customers Tab -->
@@ -396,6 +406,23 @@ const openMessageDialog = (customer) => {
   showMessageDialog.value = true
 }
 
+const switchTab = async (tab) => {
+  activeTab.value = tab
+  if (tab === 'customers') {
+    await fetchAlerts()
+  } else if (tab === 'history') {
+    await fetchMessageHistory()
+  }
+}
+
+const refreshData = async () => {
+  if (activeTab.value === 'customers') {
+    await fetchAlerts()
+  } else if (activeTab.value === 'history') {
+    await fetchMessageHistory()
+  }
+}
+
 const sendMessage = async () => {
   if (!selectedCustomer.value) return
 
@@ -417,7 +444,10 @@ const sendMessage = async () => {
 
     notificationStore.addNotification('Message sent successfully!', 'success', 3000)
     showMessageDialog.value = false
-    await fetchMessageHistory()
+    await Promise.all([
+      fetchAlerts(),
+      fetchMessageHistory()
+    ])
   } catch (error) {
     console.error('Failed to send message:', error)
     notificationStore.addNotification('Failed to send message', 'error', 3000)

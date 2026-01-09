@@ -84,15 +84,16 @@ def create_ticket():
         current_datetime = datetime.now().isoformat()
         start_date = data.get('startDate', current_datetime)
         
-        # Use start date for the first month interest payment
-        # This ensures it appears in the correct month in reports
-        payment_date = start_date if start_date else current_datetime
+        # Use start date for the first month interest payment in reports
+        # But use current datetime for lastPaymentDate so ticket appears at top of dashboard
+        payment_date_for_report = start_date if start_date else current_datetime
         
         ticket_data = {
             'customerId': customer_id,
             'customerName': customer_name,
             'customerPhone': customer_phone,
             'customerAddress': customer_address,
+            'billNumber': data.get('billNumber', ''),
             'articleName': data.get('articleName'),
             'itemType': data.get('itemType', 'Silver'),
             'grossWeight': float(data.get('grossWeight', 0)) if data.get('grossWeight') else None,
@@ -105,7 +106,7 @@ def create_ticket():
             'closeDate': None,
             'totalInterestReceived': first_month_interest,
             'interestReceivedMonths': 1,
-            'lastPaymentDate': payment_date,
+            'lastPaymentDate': current_datetime,
             'createdAt': current_datetime
         }
         
@@ -118,9 +119,9 @@ def create_ticket():
         payment_data = {
             'ticketId': ticket_id,
             'customerName': customer_name,
-            'date': payment_date,  # Use start date instead of current datetime
+            'date': payment_date_for_report,  # Use start date for correct monthly reporting
             'interestPaid': first_month_interest,
-            'interestReceivedAt': payment_date,  # Use start date
+            'interestReceivedAt': payment_date_for_report,  # Use start date for reports
             'principalPaid': 0,
             'principalReceivedAt': None,
             'monthsPaid': 1,
@@ -199,8 +200,7 @@ def get_tickets():
             
             tickets.append(ticket)
         
-        # Sort tickets by lastPaymentDate (most recent first)
-        tickets.sort(key=lambda t: t.get('lastPaymentDate', ''), reverse=True)
+        tickets.sort(key=lambda t: t.get('lastPaymentDate') or '1970-01-01', reverse=True)
             
         return jsonify(tickets), 200
     except Exception as e:

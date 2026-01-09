@@ -88,6 +88,7 @@ def outstanding_loans_report():
             if pending_principal > 0:
                 outstanding_tickets.append({
                     'id': doc.id,
+                    'billNumber': ticket.get('billNumber', ''),
                     'name': ticket.get('customerName'),
                     'articleName': ticket.get('articleName'),
                     'principal': ticket.get('principal'),
@@ -253,6 +254,7 @@ def export_outstanding_loans():
         # Write header
         writer.writerow([
             'Ticket ID',
+            'Bill Number',
             'Customer Name',
             'Article Name',
             'Original Principal (₹)',
@@ -272,6 +274,7 @@ def export_outstanding_loans():
             if pending_principal > 0:
                 outstanding_tickets.append({
                     'id': doc.id,
+                    'billNumber': ticket.get('billNumber', ''),
                     'name': ticket.get('name', ''),
                     'articleName': ticket.get('articleName', ''),
                     'principal': ticket.get('principal', 0),
@@ -289,6 +292,7 @@ def export_outstanding_loans():
         for ticket in outstanding_tickets:
             writer.writerow([
                 ticket['id'],
+                ticket['billNumber'],
                 ticket['name'],
                 ticket['articleName'],
                 f"{ticket['principal']:.2f}",

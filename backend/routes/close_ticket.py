@@ -15,11 +15,35 @@ def close_ticket(ticket_id):
         if not ticket_doc.exists:
             return jsonify({'error': 'Ticket not found'}), 404
         
+        ticket_data = ticket_doc.to_dict()
+        
+        # Only close if ticket is currently active
+        if ticket_data.get('status') != 'Active':
+            return jsonify({'message': 'Ticket is already closed'}), 200
+        
         # Update ticket status and close date
         ticket_ref.update({
             'status': 'Closed',
             'closeDate': datetime.now().isoformat()
         })
+        
+        # Update customer stats
+        customer_id = ticket_data.get('customerId')
+        if customer_id:
+            customer_ref = db.collection('customers').document(customer_id)
+            customer_doc = customer_ref.get()
+            
+            if customer_doc.exists:
+                customer = customer_doc.to_dict()
+                current_active_tickets = customer.get('activeTickets', 0)
+                current_total_outstanding = customer.get('totalOutstanding', 0)
+                pending_principal = ticket_data.get('pendingPrincipal', 0)
+                
+                # Decrease active tickets and outstanding amount
+                customer_ref.update({
+                    'activeTickets': max(0, current_active_tickets - 1),
+                    'totalOutstanding': max(0, current_total_outstanding - pending_principal)
+                })
         
         return jsonify({'message': 'Ticket closed successfully'}), 200
         
