@@ -53,6 +53,9 @@ frontend/.env.*.local
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
+frontend/package-lock.json
+frontend/yarn.lock
+frontend/.vscode/
 
 # Logs
 *.log
@@ -77,3 +80,8 @@ Thumbs.db
 .cache/
 .pytest_cache/
 .eslintcache
+backend/.vscode/
+
+# Docker & Configuration files with sensitive data
+docker-compose.override.yml
+firebase.json

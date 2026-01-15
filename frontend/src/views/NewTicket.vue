@@ -116,7 +116,8 @@ const submitForm = async () => {
     router.push('/')
     notificationStore.addNotification('Ticket created successfully!', 'success', 3000)
   } catch (e) {
-    notificationStore.addNotification(`Failed to create ticket: ${e.message}`, 'error', 3000)
+    const errorMessage = e.response?.data?.error || e.message
+    notificationStore.addNotification(`Failed to create ticket: ${errorMessage}`, 'error', 3000)
   }
 }
 </script>
@@ -412,11 +413,11 @@ const submitForm = async () => {
                 Bill Number <span class="text-red-500">*</span>
               </label>
               <input
-                type="text"
+                type="number"
                 v-model="ticketForm.billNumber"
                 required
                 placeholder="Enter bill number"
-                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 sm:text-sm p-2 border transition-all duration-200"
+                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 sm:text-sm p-2 border transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               >
             </div>
             <div class="lg:col-span-2">

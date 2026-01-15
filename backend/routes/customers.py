@@ -10,6 +10,25 @@ def create_customer():
     try:
         data = request.json
         db = get_db()
+
+        # Check for duplicates
+        phone = data.get('phone')
+        if phone:
+            existing_phone = list(db.collection('customers').where('phone', '==', phone).limit(1).stream())
+            if existing_phone:
+                return jsonify({'error': 'Customer with this phone number already exists'}), 400
+
+        id_proof = data.get('idProofNumber')
+        if id_proof:
+            existing_id = list(db.collection('customers').where('idProofNumber', '==', id_proof).limit(1).stream())
+            if existing_id:
+                return jsonify({'error': 'Customer with this ID proof number already exists'}), 400
+
+        name = data.get('name')
+        if name:
+            existing_name = list(db.collection('customers').where('name', '==', name).limit(1).stream())
+            if existing_name:
+                return jsonify({'error': 'Customer with this name already exists'}), 400
         
         customer_data = {
             'name': data.get('name'),

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FIREBASE_CREDENTIALS_PATH=/app/serviceAccountKey.json
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - ./backend/serviceAccountKey.json:/app/serviceAccountKey.json
+      - ./backend:/app
+    restart: always
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: always

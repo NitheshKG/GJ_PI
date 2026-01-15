@@ -61,6 +61,16 @@ def create_ticket():
         data = request.json
         db = get_db()
         
+        bill_number = data.get('billNumber', '')
+        # Check if bill number is numeric
+        if not str(bill_number).isdigit():
+             return jsonify({'error': 'Bill number must contain only digits'}), 400
+             
+        # Check for duplicate bill number
+        existing_bill = list(db.collection('tickets').where('billNumber', '==', bill_number).limit(1).stream())
+        if existing_bill:
+             return jsonify({'error': 'Ticket with this bill number already exists'}), 400
+        
         principal = float(data.get('principal', 0))
         interest_percentage = float(data.get('interestPercentage', 0))
         customer_id = data.get('customerId')
