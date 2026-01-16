@@ -1,0 +1,2 @@
+# Tell Railway to not use Docker, use Procfile instead
+builder = "nixpacks"
