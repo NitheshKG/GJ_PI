@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../stores/notificationStore'
 import axios from 'axios'
+import { API_URL } from '../config/api'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 
 const route = useRoute()
@@ -46,7 +47,7 @@ onMounted(async () => {
 const fetchCustomer = async () => {
   loading.value = true
   try {
-    const response = await axios.get(`http://localhost:5000/api/customers/${route.params.id}`)
+    const response = await axios.get(`${API_URL}/api/customers/${route.params.id}`)
     customer.value = response.data
   } catch (error) {
     console.error('Failed to fetch customer:', error)
@@ -56,7 +57,7 @@ const fetchCustomer = async () => {
 
 const fetchTickets = async () => {
   try {
-    const response = await axios.get(`http://localhost:5000/api/customers/${route.params.id}/tickets`)
+    const response = await axios.get(`${API_URL}/api/customers/${route.params.id}/tickets`)
     tickets.value = response.data
   } catch (error) {
     console.error('Failed to fetch tickets:', error)
@@ -94,7 +95,7 @@ const openCloseDialog = (ticket) => {
 
 const closeTicket = async () => {
   try {
-    await axios.put(`http://localhost:5000/api/tickets/${selectedTicketId.value}/close`)
+    await axios.put(`${API_URL}/api/tickets/${selectedTicketId.value}/close`)
     notificationStore.addNotification('Ticket closed successfully!', 'success', 3000)
     await fetchTickets() // Refresh tickets list
   } catch (error) {
@@ -113,7 +114,7 @@ const closeEditModal = () => {
 
 const updateCustomer = async () => {
   try {
-    await axios.put(`http://localhost:5000/api/customers/${route.params.id}`, editForm.value)
+    await axios.put(`${API_URL}/api/customers/${route.params.id}`, editForm.value)
     showEditModal.value = false
     await fetchCustomer() // Refresh details
     // Ideally we should also add a notification here but we don't have the store imported

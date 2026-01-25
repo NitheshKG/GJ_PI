@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-
-const API_URL = 'http://localhost:5000/api'
+import { API_URL } from '../config/api'
 
 export const useTicketStore = defineStore('ticket', {
     state: () => ({
@@ -14,7 +13,7 @@ export const useTicketStore = defineStore('ticket', {
         async fetchTickets() {
             this.loading = true
             try {
-                const response = await axios.get(`${API_URL}/tickets`)
+                const response = await axios.get(`${API_URL}/api/tickets`)
                 this.tickets = response.data
             } catch (err) {
                 this.error = err.message
@@ -25,7 +24,7 @@ export const useTicketStore = defineStore('ticket', {
         async createTicket(ticketData) {
             this.loading = true
             try {
-                await axios.post(`${API_URL}/tickets`, ticketData)
+                await axios.post(`${API_URL}/api/tickets`, ticketData)
                 await this.fetchTickets()
             } catch (err) {
                 this.error = err.message
@@ -37,7 +36,7 @@ export const useTicketStore = defineStore('ticket', {
         async fetchTicket(id) {
             this.loading = true
             try {
-                const response = await axios.get(`${API_URL}/tickets/${id}`)
+                const response = await axios.get(`${API_URL}/api/tickets/${id}`)
                 this.currentTicket = response.data
             } catch (err) {
                 this.error = err.message
@@ -48,7 +47,7 @@ export const useTicketStore = defineStore('ticket', {
         async addPayment(ticketId, paymentData) {
             this.loading = true
             try {
-                await axios.post(`${API_URL}/tickets/${ticketId}/payments`, paymentData)
+                await axios.post(`${API_URL}/api/tickets/${ticketId}/payments`, paymentData)
                 await this.fetchTicket(ticketId) // Refresh ticket data
             } catch (err) {
                 this.error = err.message

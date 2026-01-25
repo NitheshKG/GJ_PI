@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { API_URL } from '../config/api'
 
 const router = useRouter()
 const customers = ref([])
@@ -15,7 +16,7 @@ onMounted(async () => {
 const fetchCustomers = async () => {
   loading.value = true
   try {
-    const response = await axios.get('http://localhost:5000/api/customers')
+    const response = await axios.get(`${API_URL}/api/customers`)
     customers.value = response.data
   } catch (error) {
     console.error('Failed to fetch customers:', error)

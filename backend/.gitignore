@@ -28,3 +28,6 @@ uploads/
 # Environment variables
 .env
 .env.local
+
+
+.venv

@@ -4,6 +4,7 @@ import { useTicketStore } from '../stores/ticketStore'
 import { useNotificationStore } from '../stores/notificationStore'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { API_URL } from '../config/api'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 
 const ticketStore = useTicketStore()
@@ -91,7 +92,7 @@ const openCloseDialog = (ticket) => {
 
 const closeTicket = async () => {
   try {
-    await axios.put(`http://localhost:5000/api/tickets/${selectedTicketId.value}/close`)
+    await axios.put(`${API_URL}/api/tickets/${selectedTicketId.value}/close`)
     notificationStore.addNotification('Ticket closed successfully!', 'success', 3000)
     await ticketStore.fetchTickets()
   } catch (error) {

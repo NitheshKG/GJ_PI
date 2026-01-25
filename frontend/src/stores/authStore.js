@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
+import { API_URL } from '../config/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -23,7 +24,7 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
         username,
         password
       })
@@ -44,7 +45,7 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       if (token.value) {
-        await axios.post('http://localhost:5000/api/auth/logout', {
+        await axios.post(`${API_URL}/api/auth/logout`, {
           token: token.value
         })
       }
@@ -61,7 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return false
     
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/verify-token', {
+      const response = await axios.post(`${API_URL}/api/auth/verify-token`, {
         token: token.value
       })
       
@@ -78,7 +79,7 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/change-password', {
+      const response = await axios.post(`${API_URL}/api/auth/change-password`, {
         token: token.value,
         oldPassword,
         newPassword

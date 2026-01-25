@@ -1,17 +1,18 @@
 import os
 from dotenv import load_dotenv
 
+# Load from .env file if it exists (for local development)
 load_dotenv()
 
 class Config:
     # Firebase Configuration
-    # In production, we strictly require SECRET_KEY to be set
-    SECRET_KEY = os.getenv('SECRET_KEY')
-    if not SECRET_KEY and os.getenv('FLASK_ENV') == 'production':
-        raise ValueError("No SECRET_KEY set for production configuration")
-        
-    # Fallback for dev only
-    if not SECRET_KEY:
-        SECRET_KEY = 'dev-secret-key'
-        
+    SECRET_KEY = os.getenv('SECRET_KEY') or 'dev-secret-key-v2'
     FIREBASE_CREDENTIALS_PATH = os.getenv('FIREBASE_CREDENTIALS_PATH', 'serviceAccountKey.json')
+    
+    # CORS Configuration - Allow GitHub Pages frontend and local development
+    CORS_ORIGINS = [
+        'https://nitheshkg.github.io',
+        'http://localhost:5173',  # Vite dev server
+        'http://localhost:3000',   # Alternative dev server
+        'http://localhost:5000',   # Local API
+    ]

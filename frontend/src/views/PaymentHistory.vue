@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTicketStore } from '../stores/ticketStore'
 import axios from 'axios'
+import { API_URL } from '../config/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,7 +23,7 @@ onMounted(async () => {
 
 const fetchPayments = async () => {
   try {
-    const response = await axios.get(`http://localhost:5000/api/tickets/${route.params.id}/payments`)
+    const response = await axios.get(`${API_URL}/api/tickets/${route.params.id}/payments`)
     payments.value = response.data
   } catch (error) {
     console.error('Failed to fetch payments:', error)

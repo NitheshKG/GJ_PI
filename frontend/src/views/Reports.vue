@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+import { API_URL } from '../config/api'
 
 const loading = ref(false)
 const filterType = ref('month') // 'month', 'range', 'all'
@@ -29,7 +30,7 @@ onMounted(async () => {
 
 const fetchAllPayments = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/payments')
+    const response = await axios.get(`${API_URL}/api/payments`)
     allPayments.value = response.data || []
   } catch (error) {
     console.error('Failed to fetch all payments:', error)
@@ -126,7 +127,7 @@ const fetchMonthlyReport = async () => {
 
 const fetchOutstandingLoans = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/reports/outstanding-loans')
+    const response = await axios.get(`${API_URL}/api/reports/outstanding-loans`)
     outstandingLoans.value = response.data
   } catch (error) {
     console.error('Failed to fetch outstanding loans:', error)
@@ -135,7 +136,7 @@ const fetchOutstandingLoans = async () => {
 
 const fetchAllTickets = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/tickets')
+    const response = await axios.get(`${API_URL}/api/tickets`)
     allTickets.value = response.data
   } catch (error) {
     console.error('Failed to fetch tickets:', error)
@@ -201,7 +202,7 @@ const formatCurrency = (amount) => {
 
 const exportPaymentReport = async () => {
   try {
-    let url = 'http://localhost:5000/api/reports/export/payment-report?'
+    let url = `${API_URL}/api/reports/export/payment-report?`
     
     const params = new URLSearchParams()
     params.append('filterType', filterType.value)
@@ -225,7 +226,7 @@ const exportPaymentReport = async () => {
 
 const exportOutstandingLoans = async () => {
   try {
-    const url = 'http://localhost:5000/api/reports/export/outstanding-loans'
+    const url = `${API_URL}/api/reports/export/outstanding-loans`
     // Open in new window to trigger download
     window.open(url, '_blank')
   } catch (error) {
