@@ -5,6 +5,13 @@
 
 # Firebase credentials
 serviceAccountKey.json
+serviceAccountKey-dev.json
+
+# Local development database (JSON files)
+local_data/
+
+#local setup files
+LOCAL_DEV_SETUP.md
 
 # Backend
 backend/__pycache__/
@@ -85,3 +92,5 @@ backend/.vscode/
 # Docker & Configuration files with sensitive data
 docker-compose.override.yml
 firebase.json
+
+run_helper.md

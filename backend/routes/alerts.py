@@ -151,7 +151,9 @@ def send_sms_via_fast2sms(phone_number, message):
 @alerts_bp.route('/overdue-interests', methods=['GET'])
 def get_overdue_interests():
     """
-    Get customers with pending interests >= 12 months.
+    Get customers with pending interests based on item type:
+    - Gold: >= 12 months
+    - Silver: >= 6 months
     Returns a list of customers with pending interest details.
     """
     try:
@@ -197,8 +199,12 @@ def get_overdue_interests():
             # Calculate actual pending interest months
             pending_interest_months = max(0, completed_months - interest_received_months)
             
-            # If 12+ months of interest are pending, add to overdue list
-            if pending_interest_months >= 12:
+            # Determine threshold based on item type
+            item_type = ticket.get('itemType', 'Silver')
+            threshold_months = 12 if item_type.lower() == 'gold' else 6
+            
+            # Check if pending interest months exceed threshold
+            if pending_interest_months >= threshold_months:
                 # Check if this customer already exists in overdue_customers
                 customer_exists = False
                 for existing_customer in overdue_customers:

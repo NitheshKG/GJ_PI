@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+    # Application Environment
+    ENVIRONMENT = os.getenv('ENVIRONMENT', 'production')  # 'development' or 'production'
+    
     # Firebase Configuration
     SECRET_KEY = os.getenv('SECRET_KEY') or 'dev-secret-key-v2'
     FIREBASE_CREDENTIALS_PATH = os.getenv('FIREBASE_CREDENTIALS_PATH', 'serviceAccountKey.json')
