@@ -61,22 +61,23 @@ def create_ticket():
         data = request.json
         db = get_db()
         
+        # Validate required fields first
+        customer_id = data.get('customerId')
+        if not customer_id:
+            return jsonify({'error': 'customerId is required'}), 400
+        
         bill_number = data.get('billNumber', '')
         # Check if bill number is numeric
         if not str(bill_number).isdigit():
              return jsonify({'error': 'Bill number must contain only digits'}), 400
              
-        # Check for duplicate bill number
+        # Check for duplicate bill number BEFORE verifying customer
         existing_bill = list(db.collection('tickets').where('billNumber', '==', bill_number).limit(1).stream())
         if existing_bill:
              return jsonify({'error': 'Ticket with this bill number already exists'}), 400
         
         principal = float(data.get('principal', 0))
         interest_percentage = float(data.get('interestPercentage', 0))
-        customer_id = data.get('customerId')
-        
-        if not customer_id:
-            return jsonify({'error': 'customerId is required'}), 400
         
         # Verify customer exists
         customer_ref = db.collection('customers').document(customer_id)
@@ -291,6 +292,8 @@ def add_payment(ticket_id):
         payment_data = {
             'ticketId': ticket_id,  # Link to ticket
             'customerName': customer_name,  # Fetch from customer record
+            'billNumber': ticket_data.get('billNumber', ''),  # Bill number from ticket
+            'articleName': ticket_data.get('articleName', ''),  # Item/article name from ticket
             'date': current_datetime,  # General payment date
             'interestPaid': interest_paid,
             'interestReceivedAt': current_datetime if interest_paid > 0 else None,

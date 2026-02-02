@@ -90,12 +90,20 @@ const fetchMonthlyReport = async () => {
     // Create combined transactions list (investments + payments)
     const transactions = []
     
+    // Create a map of tickets by ID for quick lookup
+    const ticketMap = new Map()
+    allTickets.value.forEach(ticket => {
+      ticketMap.set(ticket.id, ticket)
+    })
+    
     // Add ticket investments as transactions
     filteredTickets.forEach(ticket => {
       transactions.push({
         id: `investment-${ticket.id}`,
         date: ticket.startDate,
         customerName: ticket.name,
+        billNumber: ticket.billNumber || '',
+        articleName: ticket.articleName || '',
         type: 'Invested',
         interestPaid: 0,
         principalPaid: ticket.principal,
@@ -103,10 +111,24 @@ const fetchMonthlyReport = async () => {
       })
     })
     
-    // Add payments as transactions
+    // Add payments as transactions, enriching with ticket data if needed
     filteredPayments.forEach(payment => {
+      // If payment doesn't have billNumber/articleName, get them from the associated ticket
+      let billNumber = payment.billNumber || ''
+      let articleName = payment.articleName || ''
+      
+      if ((!billNumber || !articleName) && payment.ticketId) {
+        const ticket = ticketMap.get(payment.ticketId)
+        if (ticket) {
+          billNumber = billNumber || ticket.billNumber || ''
+          articleName = articleName || ticket.articleName || ''
+        }
+      }
+      
       transactions.push({
         ...payment,
+        billNumber,
+        articleName,
         type: 'Received',
         isPrincipalInvestment: false
       })
@@ -446,6 +468,8 @@ const exportOutstandingLoans = async () => {
                 <tr>
                   <th class="px-2 sm:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                   <th class="px-2 sm:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                  <th class="px-2 sm:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bill Number</th>
+                  <th class="px-2 sm:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
                   <th class="px-2 sm:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                   <th class="px-2 sm:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Interest</th>
                   <th class="px-2 sm:px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Principal</th>
@@ -457,6 +481,8 @@ const exportOutstandingLoans = async () => {
                     {{ new Date(payment.date).toLocaleDateString() }}
                   </td>
                   <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">{{ payment.customerName }}</td>
+                  <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">{{ payment.billNumber || '-' }}</td>
+                  <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">{{ payment.articleName || '-' }}</td>
                   <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm">
                     <span :class="payment.type === 'Invested' ? 'text-orange-600 font-medium' : 'text-green-600 font-medium'">
                       {{ payment.type }}

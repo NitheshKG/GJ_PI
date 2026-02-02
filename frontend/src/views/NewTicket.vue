@@ -95,23 +95,47 @@ const submitForm = async () => {
   try {
     let customerId = selectedCustomerId.value
 
-    // Create new customer if needed
-    if (showNewCustomerForm.value) {
-      const customerResponse = await axios.post('http://localhost:5000/api/customers', customerForm.value)
-      customerId = customerResponse.data.id
-    }
-
-    if (!customerId) {
+    if (!customerId && !showNewCustomerForm.value) {
       notificationStore.addNotification('Please select or create a customer', 'error', 3000)
       return
     }
 
-    // Create ticket
-    const ticketData = {
-      ...ticketForm.value,
-      customerId
+    // IMPORTANT: If creating a new customer, validate the bill number FIRST
+    // This prevents orphan customers when ticket creation fails
+    if (showNewCustomerForm.value && ticketForm.value.billNumber) {
+      try {
+        // Check if bill number already exists by attempting to get tickets with this bill number
+        const checkResponse = await axios.get(`http://localhost:5000/api/tickets`)
+        const existingTicket = checkResponse.data.find(t => t.billNumber === ticketForm.value.billNumber)
+        if (existingTicket) {
+          notificationStore.addNotification('Ticket with this bill number already exists', 'error', 3000)
+          return
+        }
+      } catch (error) {
+        console.error('Error checking bill number:', error)
+      }
     }
 
+    // Prepare ticket data
+    const ticketData = {
+      ...ticketForm.value,
+      customerId: customerId || 'temp' // Use temp value if creating new customer
+    }
+
+    // Create new customer only AFTER validating bill number
+    if (showNewCustomerForm.value) {
+      try {
+        const customerResponse = await axios.post('http://localhost:5000/api/customers', customerForm.value)
+        customerId = customerResponse.data.id
+        ticketData.customerId = customerId
+      } catch (customerError) {
+        const errorMessage = customerError.response?.data?.error || customerError.message
+        notificationStore.addNotification(`Failed to create customer: ${errorMessage}`, 'error', 3000)
+        return // Stop here - don't create ticket if customer creation failed
+      }
+    }
+
+    // Create ticket
     await axios.post('http://localhost:5000/api/tickets', ticketData)
     router.push('/')
     notificationStore.addNotification('Ticket created successfully!', 'success', 3000)
