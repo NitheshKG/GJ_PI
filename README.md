@@ -56,6 +56,7 @@ GJ_PI/
     ├── services/
     │   └── db.py               # Database service
     ├── app.py                  # Flask application entry point
+    |── local_data
     ├── config.py               # Configuration settings
     ├── requirements.txt        # Python dependencies
     └── migrations/             # Database migration scripts
