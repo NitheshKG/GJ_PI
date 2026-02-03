@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useTicketStore } from '../stores/ticketStore'
 import { useNotificationStore } from '../stores/notificationStore'
 import axios from 'axios'
+import { API_URL } from '../config/api'
 
 const ticketStore = useTicketStore()
 const notificationStore = useNotificationStore()
@@ -64,7 +65,7 @@ const handleClickOutside = (event) => {
 
 const fetchCustomers = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/customers')
+    const response = await axios.get(`${API_URL}/api/customers`)
     customers.value = response.data
     filteredCustomers.value = response.data
   } catch (error) {
@@ -105,7 +106,7 @@ const submitForm = async () => {
     if (showNewCustomerForm.value && ticketForm.value.billNumber) {
       try {
         // Check if bill number already exists by attempting to get tickets with this bill number
-        const checkResponse = await axios.get(`http://localhost:5000/api/tickets`)
+        const checkResponse = await axios.get(`${API_URL}/api/tickets`)
         const existingTicket = checkResponse.data.find(t => t.billNumber === ticketForm.value.billNumber)
         if (existingTicket) {
           notificationStore.addNotification('Ticket with this bill number already exists', 'error', 3000)
@@ -125,7 +126,7 @@ const submitForm = async () => {
     // Create new customer only AFTER validating bill number
     if (showNewCustomerForm.value) {
       try {
-        const customerResponse = await axios.post('http://localhost:5000/api/customers', customerForm.value)
+        const customerResponse = await axios.post(`${API_URL}/api/customers`, customerForm.value)
         customerId = customerResponse.data.id
         ticketData.customerId = customerId
       } catch (customerError) {
@@ -136,7 +137,7 @@ const submitForm = async () => {
     }
 
     // Create ticket
-    await axios.post('http://localhost:5000/api/tickets', ticketData)
+    await axios.post(`${API_URL}/api/tickets`, ticketData)
     router.push('/')
     notificationStore.addNotification('Ticket created successfully!', 'success', 3000)
   } catch (e) {

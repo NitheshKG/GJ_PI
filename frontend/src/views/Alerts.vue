@@ -337,6 +337,7 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useNotificationStore } from '../stores/notificationStore'
+import { API_URL } from '../config/api'
 
 const notificationStore = useNotificationStore()
 
@@ -365,7 +366,7 @@ const servicesConfigured = computed(() => {
 
 const fetchSetupStatus = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/alerts/setup-status')
+    const response = await axios.get(`${API_URL}/api/alerts/setup-status`)
     setupStatus.value = response.data
   } catch (error) {
     console.error('Failed to fetch setup status:', error)
@@ -375,7 +376,7 @@ const fetchSetupStatus = async () => {
 const fetchAlerts = async () => {
   try {
     loading.value = true
-    const response = await axios.get('http://localhost:5000/api/alerts/overdue-interests')
+    const response = await axios.get(`${API_URL}/api/alerts/overdue-interests`)
     alertCustomers.value = response.data.customers || []
   } catch (error) {
     console.error('Failed to fetch alerts:', error)
@@ -388,7 +389,7 @@ const fetchAlerts = async () => {
 const fetchMessageHistory = async () => {
   try {
     loadingHistory.value = true
-    const response = await axios.get('http://localhost:5000/api/alerts/message-history')
+    const response = await axios.get(`${API_URL}/api/alerts/message-history`)
     messageHistory.value = response.data.messages || []
   } catch (error) {
     console.error('Failed to fetch message history:', error)
@@ -437,7 +438,7 @@ const sendMessage = async () => {
 
   try {
     sendingMessage.value = true
-    const response = await axios.post(`http://localhost:5000/api/alerts/send-message/${selectedCustomer.value.customerId}`, {
+    const response = await axios.post(`${API_URL}/api/alerts/send-message/${selectedCustomer.value.customerId}`, {
       message,
       method: sendMethod.value
     })
