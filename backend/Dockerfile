@@ -14,8 +14,9 @@ RUN pip install gunicorn
 # Copy the rest of the application
 COPY . .
 
-# Make port 5000 available to the world outside this container
-EXPOSE 5000
+# Make port 8080 available (Cloud Run default)
+EXPOSE 8080
 
 # Run app.py when the container launches
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+# Use PORT environment variable from Cloud Run (defaults to 8080)
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 app:app
