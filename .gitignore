@@ -92,5 +92,3 @@ backend/.vscode/
 # Docker & Configuration files with sensitive data
 docker-compose.override.yml
 firebase.json
-
-run_helper.md
