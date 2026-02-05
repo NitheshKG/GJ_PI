@@ -94,7 +94,7 @@ const submitPayment = async () => {
           <div>
             <label for="monthsPaid" class="block text-sm font-medium text-gray-700">Months Paid</label>
             <div class="mt-1">
-              <input type="number" name="monthsPaid" id="monthsPaid" v-model="form.monthsPaid" min="0" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+              <input type="number" name="monthsPaid" id="monthsPaid" v-model="form.monthsPaid" min="0" step="0.5" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
             </div>
             <p class="mt-1 text-xs text-gray-500">Leave as 0 if only paying principal</p>
           </div>

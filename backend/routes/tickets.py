@@ -273,7 +273,7 @@ def add_payment(ticket_id):
         
         interest_paid = float(data.get('interestPaid', 0))
         principal_paid = float(data.get('principalPaid', 0))
-        months_paid = int(data.get('monthsPaid', 0))
+        months_paid = float(data.get('monthsPaid', 0))
         
         new_pending_principal = current_pending_principal - principal_paid
         
