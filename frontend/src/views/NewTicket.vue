@@ -48,7 +48,7 @@ const ticketForm = ref({
   netWeight: '',
   principal: '',
   interestPercentage: '',
-  startDate: new Date().toISOString().split('T')[0]
+  startDate: ''
 })
 
 onMounted(async () => {
