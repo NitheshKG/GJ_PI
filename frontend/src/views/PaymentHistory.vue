@@ -2,15 +2,19 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTicketStore } from '../stores/ticketStore'
+import { useNotificationStore } from '../stores/notificationStore'
 import axios from 'axios'
 import { API_URL } from '../config/api'
 
 const route = useRoute()
 const router = useRouter()
 const ticketStore = useTicketStore()
+const notificationStore = useNotificationStore()
 
 const payments = ref([])
 const loading = ref(false)
+const editingPaymentId = ref(null)
+const editForm = ref({})
 
 const ticket = computed(() => ticketStore.currentTicket)
 
@@ -42,6 +46,60 @@ const formatDateTime = (dateString) => {
 const formatDate = (dateString) => {
   if (!dateString) return '-'
   return new Date(dateString).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+}
+
+const startEditPayment = (payment) => {
+  editingPaymentId.value = payment.id
+  editForm.value = {
+    interestPaid: payment.interestPaid,
+    principalPaid: payment.principalPaid,
+    monthsPaid: payment.monthsPaid,
+    date: payment.date
+  }
+}
+
+const cancelEdit = () => {
+  editingPaymentId.value = null
+  editForm.value = {}
+}
+
+const savePayment = async (paymentId) => {
+  try {
+    const updateData = {
+      interestPaid: parseFloat(editForm.value.interestPaid) || 0,
+      principalPaid: parseFloat(editForm.value.principalPaid) || 0,
+      monthsPaid: parseFloat(editForm.value.monthsPaid) || 0
+    }
+
+    await axios.put(`${API_URL}/api/payments/${paymentId}`, updateData)
+    
+    notificationStore.addNotification('Payment updated successfully!', 'success', 3000)
+    editingPaymentId.value = null
+    editForm.value = {}
+    
+    // Refresh payments and ticket data
+    await fetchPayments()
+    await ticketStore.fetchTicket(route.params.id)
+  } catch (error) {
+    const errorMessage = error.response?.data?.error || error.message
+    notificationStore.addNotification(`Failed to update payment: ${errorMessage}`, 'error', 3000)
+  }
+}
+
+const deletePayment = async (paymentId) => {
+  if (!confirm('Are you sure you want to delete this payment?')) {
+    return
+  }
+  
+  try {
+    await axios.delete(`${API_URL}/api/payments/${paymentId}`)
+    notificationStore.addNotification('Payment deleted successfully!', 'success', 3000)
+    await fetchPayments()
+    await ticketStore.fetchTicket(route.params.id)
+  } catch (error) {
+    const errorMessage = error.response?.data?.error || error.message
+    notificationStore.addNotification(`Failed to delete payment: ${errorMessage}`, 'error', 3000)
+  }
 }
 </script>
 
@@ -150,24 +208,92 @@ const formatDate = (dateString) => {
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Remaining Principal
                 </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="payment in payments" :key="payment.id" class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              <tr v-for="payment in payments" :key="payment.id" :class="editingPaymentId === payment.id ? 'bg-blue-50' : 'hover:bg-gray-50'">
+                <td v-if="editingPaymentId === payment.id" class="px-6 py-4 whitespace-nowrap text-sm">
+                  <input 
+                    type="text" 
+                    v-model="editForm.date" 
+                    class="border border-gray-300 rounded px-2 py-1 text-sm w-full"
+                    disabled
+                  />
+                </td>
+                <td v-else class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {{ formatDateTime(payment.date) }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td v-if="editingPaymentId === payment.id" class="px-6 py-4 whitespace-nowrap text-sm">
+                  <input 
+                    type="number" 
+                    v-model.number="editForm.monthsPaid" 
+                    step="0.5"
+                    min="0"
+                    class="border border-gray-300 rounded px-2 py-1 text-sm w-20"
+                  />
+                </td>
+                <td v-else class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {{ payment.monthsPaid || '-' }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                <td v-if="editingPaymentId === payment.id" class="px-6 py-4 whitespace-nowrap text-sm">
+                  <input 
+                    type="number" 
+                    v-model.number="editForm.interestPaid" 
+                    step="0.01"
+                    min="0"
+                    class="border border-gray-300 rounded px-2 py-1 text-sm w-24"
+                  />
+                </td>
+                <td v-else class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
                   {{ payment.interestPaid > 0 ? `₹${payment.interestPaid.toLocaleString()}` : '-' }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                <td v-if="editingPaymentId === payment.id" class="px-6 py-4 whitespace-nowrap text-sm">
+                  <input 
+                    type="number" 
+                    v-model.number="editForm.principalPaid" 
+                    step="0.01"
+                    min="0"
+                    class="border border-gray-300 rounded px-2 py-1 text-sm w-24"
+                  />
+                </td>
+                <td v-else class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                   {{ payment.principalPaid > 0 ? `₹${payment.principalPaid.toLocaleString()}` : '-' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                   ₹{{ payment.remainingPrincipal?.toLocaleString() || 0 }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                  <div v-if="editingPaymentId === payment.id" class="flex gap-2">
+                    <button 
+                      @click="savePayment(payment.id)"
+                      class="text-green-600 hover:text-green-900 font-semibold"
+                    >
+                      Save
+                    </button>
+                    <button 
+                      @click="cancelEdit"
+                      class="text-gray-600 hover:text-gray-900"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <div v-else class="flex gap-2">
+                    <button 
+                      @click="startEditPayment(payment)"
+                      class="text-amber-600 hover:text-amber-900"
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      @click="deletePayment(payment.id)"
+                      class="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>

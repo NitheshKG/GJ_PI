@@ -229,6 +229,10 @@ class DocumentReference:
             if doc.get('id') == str(self.doc_id):
                 return DocumentSnapshot(doc, self.doc_id)
         return None
+    
+    def delete(self):
+        """Delete document"""
+        return self.db.delete_document(self.collection_name, self.doc_id)
 
 
 class DocumentSnapshot:

@@ -127,6 +127,11 @@ From the `backend` directory:
 python app.py
 ```
 
+For running it local
+```
+ENVIRONMENT=development PORT=5000 python app.py
+```
+
 The API will be available at `http://localhost:5000` (or the configured port)
 
 ### Frontend

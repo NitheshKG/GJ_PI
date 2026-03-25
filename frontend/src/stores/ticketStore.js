@@ -44,6 +44,19 @@ export const useTicketStore = defineStore('ticket', {
                 this.loading = false
             }
         },
+        async editTicket(ticketId, ticketData) {
+            this.loading = true
+            try {
+                await axios.put(`${API_URL}/api/tickets/${ticketId}`, ticketData)
+                await this.fetchTicket(ticketId)
+                await this.fetchTickets() // Refresh all tickets
+            } catch (err) {
+                this.error = err.message
+                throw err
+            } finally {
+                this.loading = false
+            }
+        },
         async addPayment(ticketId, paymentData) {
             this.loading = true
             try {

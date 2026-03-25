@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import Dashboard from '../views/Dashboard.vue'
 import NewTicket from '../views/NewTicket.vue'
+import EditTicket from '../views/EditTicket.vue'
 import RecordPayment from '../views/RecordPayment.vue'
 import PaymentHistory from '../views/PaymentHistory.vue'
 import Reports from '../views/Reports.vue'
@@ -29,6 +30,12 @@ const router = createRouter({
             path: '/tickets/new',
             name: 'new-ticket',
             component: NewTicket,
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/tickets/:id/edit',
+            name: 'edit-ticket',
+            component: EditTicket,
             meta: { requiresAuth: true }
         },
         {

@@ -342,3 +342,80 @@ def get_payments(ticket_id):
         return jsonify(payments), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@tickets_bp.route('/<ticket_id>', methods=['PUT'])
+def edit_ticket(ticket_id):
+    """Edit ticket details"""
+    try:
+        data = request.json
+        db = get_db()
+        
+        ticket_ref = db.collection('tickets').document(ticket_id)
+        ticket_doc = ticket_ref.get()
+        
+        if not ticket_doc.exists:
+            return jsonify({'error': 'Ticket not found'}), 404
+        
+        ticket_data = ticket_doc.to_dict()
+        
+        # Build update data - only update fields that are provided
+        update_data = {}
+        
+        # Allow editing these fields
+        if 'billNumber' in data:
+            bill_number = data.get('billNumber', '')
+            if not str(bill_number).isdigit():
+                return jsonify({'error': 'Bill number must contain only digits'}), 400
+            
+            # Check if new bill number already exists (excluding current ticket)
+            existing_bills = list(db.collection('tickets').where('billNumber', '==', bill_number).stream())
+            for bill_doc in existing_bills:
+                if bill_doc.id != ticket_id:
+                    return jsonify({'error': 'Ticket with this bill number already exists'}), 400
+            
+            update_data['billNumber'] = bill_number
+        
+        if 'articleName' in data:
+            update_data['articleName'] = data.get('articleName')
+        
+        if 'itemType' in data:
+            update_data['itemType'] = data.get('itemType', 'Silver')
+        
+        if 'grossWeight' in data:
+            gross_weight = data.get('grossWeight')
+            update_data['grossWeight'] = float(gross_weight) if gross_weight else None
+        
+        if 'netWeight' in data:
+            net_weight = data.get('netWeight')
+            update_data['netWeight'] = float(net_weight) if net_weight else None
+        
+        if 'principal' in data:
+            new_principal = float(data.get('principal', 0))
+            current_principal = ticket_data.get('principal', 0)
+            
+            # Only restrict if principal is actually changing AND payments have been made
+            if new_principal != current_principal:
+                if ticket_data.get('interestReceivedMonths', 0) > 1 or ticket_data.get('totalInterestReceived', 0) > 0:
+                    return jsonify({'error': 'Cannot edit principal after payments have been made'}), 400
+            
+            update_data['principal'] = new_principal
+            update_data['pendingPrincipal'] = new_principal
+        
+        if 'interestPercentage' in data:
+            update_data['interestPercentage'] = float(data.get('interestPercentage', 0))
+        
+        if 'startDate' in data:
+            update_data['startDate'] = data.get('startDate')
+        
+        if not update_data:
+            return jsonify({'error': 'No fields to update'}), 400
+        
+        # Perform the update
+        ticket_ref.update(update_data)
+        
+        return jsonify({'message': 'Ticket updated successfully'}), 200
+        
+    except ValueError as e:
+        return jsonify({'error': f'Invalid value: {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

@@ -157,41 +157,71 @@ def get_customer_tickets(customer_id):
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-@customers_bp.route('/<customer_id>', methods=['PUT'])
-def update_customer(customer_id):
-    """Update customer details."""
+
+@customers_bp.route('/<customer_id>', methods=['GET', 'PUT', 'DELETE'])
+def manage_customer(customer_id):
+    """Get, update, or delete a customer."""
     try:
-        data = request.json
         db = get_db()
         customer_ref = db.collection('customers').document(customer_id)
+        customer_doc = customer_ref.get()
         
-        if not customer_ref.get().exists:
+        if not customer_doc.exists:
             return jsonify({'error': 'Customer not found'}), 404
+        
+        # GET: Retrieve customer details
+        if request.method == 'GET':
+            customer = customer_doc.to_dict()
+            customer['id'] = customer_doc.id
+            return jsonify(customer), 200
+        
+        # PUT: Update customer details
+        elif request.method == 'PUT':
+            data = request.json
             
-        # Fields to update
-        update_data = {
-            'name': data.get('name'),
-            'phone': data.get('phone'),
-            'address': data.get('address'),
-            'state': data.get('state'),
-            'city': data.get('city'),
-            'pincode': data.get('pincode'),
-            'idProofType': data.get('idProofType'),
-            'idProofOtherName': data.get('idProofOtherName'),
-            'idProofNumber': data.get('idProofNumber')
-        }
+            # Fields to update
+            update_data = {
+                'name': data.get('name'),
+                'phone': data.get('phone'),
+                'address': data.get('address'),
+                'state': data.get('state'),
+                'city': data.get('city'),
+                'pincode': data.get('pincode'),
+                'idProofType': data.get('idProofType'),
+                'idProofOtherName': data.get('idProofOtherName'),
+                'idProofNumber': data.get('idProofNumber')
+            }
+            
+            customer_ref.update(update_data)
+            return jsonify({'message': 'Customer updated successfully'}), 200
         
-        # Remove None values to avoid overwriting with null if field is missing in request (optional, but good practice)
-        # However, for a full update form, we might want to allow clearing fields. 
-        # Here we assume the frontend sends all current values.
-        
-        customer_ref.update(update_data)
-        
-        # Also update redundant data in tickets if any (optional but recommended for consistency)
-        # This can be expensive if there are many tickets. For now, we update the customer.
-        # Ideally, tickets should fetch customer details dynamically or use a denormalized update trigger.
-        
-        return jsonify({'message': 'Customer updated successfully'}), 200
+        # DELETE: Delete customer and all associated tickets and payments
+        elif request.method == 'DELETE':
+            # Get all tickets for this customer
+            tickets_query = db.collection('tickets').where('customerId', '==', customer_id)
+            tickets_docs = list(tickets_query.stream())
+            
+            # Delete all payments associated with these tickets
+            for ticket_doc in tickets_docs:
+                ticket_id = ticket_doc.id
+                payments_query = db.collection('payments').where('ticketId', '==', ticket_id)
+                payments_docs = list(payments_query.stream())
+                for payment_doc in payments_docs:
+                    payment_id = payment_doc.id
+                    payment_ref = db.collection('payments').document(payment_id)
+                    payment_ref.delete()
+            
+            # Delete all tickets for this customer
+            for ticket_doc in tickets_docs:
+                ticket_id = ticket_doc.id
+                ticket_ref = db.collection('tickets').document(ticket_id)
+                ticket_ref.delete()
+            
+            # Delete the customer
+            customer_ref.delete()
+            
+            return jsonify({'message': 'Customer deleted successfully along with all tickets and payments'}), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+

@@ -19,19 +19,57 @@ const selectedTicketName = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 
+// Sorting
+const sortBy = ref('startDate')
+const sortOrder = ref('desc')
+
 onMounted(() => {
   ticketStore.fetchTickets()
 })
 
+// Sorting computed property
+const sortedTickets = computed(() => {
+  const tickets = [...ticketStore.tickets]
+  
+  tickets.sort((a, b) => {
+    let aValue = a[sortBy.value]
+    let bValue = b[sortBy.value]
+    
+    // Handle nested or special properties
+    if (sortBy.value === 'pendingMonths') {
+      aValue = calculatePendingMonths(a)
+      bValue = calculatePendingMonths(b)
+    }
+    
+    // Handle null/undefined values
+    if (aValue == null && bValue == null) return 0
+    if (aValue == null) return sortOrder.value === 'asc' ? 1 : -1
+    if (bValue == null) return sortOrder.value === 'asc' ? -1 : 1
+    
+    // Sort dates
+    if (sortBy.value === 'startDate' || sortBy.value === 'closeDate') {
+      aValue = new Date(aValue).getTime()
+      bValue = new Date(bValue).getTime()
+    }
+    
+    // Compare values
+    if (aValue < bValue) return sortOrder.value === 'asc' ? -1 : 1
+    if (aValue > bValue) return sortOrder.value === 'asc' ? 1 : -1
+    return 0
+  })
+  
+  return tickets
+})
+
 // Pagination computed properties
 const totalPages = computed(() => {
-  return Math.ceil(ticketStore.tickets.length / itemsPerPage.value)
+  return Math.ceil(sortedTickets.value.length / itemsPerPage.value)
 })
 
 const paginatedTickets = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
-  return ticketStore.tickets.slice(start, end)
+  return sortedTickets.value.slice(start, end)
 })
 
 const visiblePageNumbers = computed(() => {
@@ -105,6 +143,21 @@ const goToPage = (page) => {
     currentPage.value = page
   }
 }
+
+const toggleSort = (column) => {
+  if (sortBy.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortBy.value = column
+    sortOrder.value = 'asc'
+  }
+  currentPage.value = 1
+}
+
+const getSortIcon = (column) => {
+  if (sortBy.value !== column) return '⇅'
+  return sortOrder.value === 'asc' ? '↑' : '↓'
+}
 </script>
 
 <template>
@@ -137,38 +190,71 @@ const goToPage = (page) => {
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" @click="toggleSort('name')">
+                  <div class="flex items-center justify-between gap-2">
+                    Name
+                    <span class="text-gray-400">{{ getSortIcon('name') }}</span>
+                  </div>
                 </th>
-                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Bill Number
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" @click="toggleSort('billNumber')">
+                  <div class="flex items-center justify-between gap-2">
+                    Bill Number
+                    <span class="text-gray-400">{{ getSortIcon('billNumber') }}</span>
+                  </div>
                 </th>
-                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Item
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" @click="toggleSort('articleName')">
+                  <div class="flex items-center justify-between gap-2">
+                    Item
+                    <span class="text-gray-400">{{ getSortIcon('articleName') }}</span>
+                  </div>
                 </th>
-                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Initial Principal
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" @click="toggleSort('principal')">
+                  <div class="flex items-center justify-between gap-2">
+                    Initial Principal
+                    <span class="text-gray-400">{{ getSortIcon('principal') }}</span>
+                  </div>
                 </th>
-                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pending Principal
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" @click="toggleSort('pendingPrincipal')">
+                  <div class="flex items-center justify-between gap-2">
+                    Pending Principal
+                    <span class="text-gray-400">{{ getSortIcon('pendingPrincipal') }}</span>
+                  </div>
                 </th>
-                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Interest %
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" @click="toggleSort('interestPercentage')">
+                  <div class="flex items-center justify-between gap-2">
+                    Interest %
+                    <span class="text-gray-400">{{ getSortIcon('interestPercentage') }}</span>
+                  </div>
                 </th>
-                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Start Date
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" @click="toggleSort('startDate')">
+                  <div class="flex items-center justify-between gap-2">
+                    Start Date
+                    <span class="text-gray-400">{{ getSortIcon('startDate') }}</span>
+                  </div>
                 </th>
-                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Interest Pending Months
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" @click="toggleSort('pendingMonths')">
+                  <div class="flex items-center justify-between gap-2">
+                    Interest Pending Months
+                    <span class="text-gray-400">{{ getSortIcon('pendingMonths') }}</span>
+                  </div>
                 </th>
-                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Interest Received
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" @click="toggleSort('totalInterestReceived')">
+                  <div class="flex items-center justify-between gap-2">
+                    Interest Received
+                    <span class="text-gray-400">{{ getSortIcon('totalInterestReceived') }}</span>
+                  </div>
                 </th>
-                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" @click="toggleSort('status')">
+                  <div class="flex items-center justify-between gap-2">
+                    Status
+                    <span class="text-gray-400">{{ getSortIcon('status') }}</span>
+                  </div>
                 </th>
-                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Close Date
+                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none" @click="toggleSort('closeDate')">
+                  <div class="flex items-center justify-between gap-2">
+                    Close Date
+                    <span class="text-gray-400">{{ getSortIcon('closeDate') }}</span>
+                  </div>
                 </th>
                 <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -279,9 +365,9 @@ const goToPage = (page) => {
                 Showing
                 <span class="font-medium">{{ (currentPage - 1) * itemsPerPage + 1 }}</span>
                 to
-                <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, ticketStore.tickets.length) }}</span>
+                <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, sortedTickets.length) }}</span>
                 of
-                <span class="font-medium">{{ ticketStore.tickets.length }}</span>
+                <span class="font-medium">{{ sortedTickets.length }}</span>
                 tickets
               </p>
             </div>

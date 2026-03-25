@@ -15,6 +15,7 @@ const tickets = ref([])
 const loading = ref(false)
 const showEditModal = ref(false)
 const showConfirmDialog = ref(false)
+const showDeleteConfirmDialog = ref(false)
 const selectedTicketId = ref(null)
 const selectedTicketName = ref('')
 const editForm = ref({
@@ -103,6 +104,20 @@ const closeTicket = async () => {
   }
 }
 
+const openDeleteConfirmDialog = () => {
+  showDeleteConfirmDialog.value = true
+}
+
+const deleteCustomer = async () => {
+  try {
+    await axios.delete(`${API_URL}/api/customers/${route.params.id}`)
+    notificationStore.addNotification('Customer deleted successfully!', 'success', 3000)
+    router.push('/customers')
+  } catch (error) {
+    notificationStore.addNotification('Failed to delete customer', 'error', 3000)
+  }
+}
+
 const openEditModal = () => {
   editForm.value = { ...customer.value }
   showEditModal.value = true
@@ -134,12 +149,20 @@ const updateCustomer = async () => {
           <div>
             <h3 class="text-lg leading-6 font-medium text-gray-900">Customer Details</h3>
           </div>
-          <router-link
-            to="/customers"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-          >
-            Back to Customers
-          </router-link>
+          <div class="flex gap-3">
+            <button
+              @click="openDeleteConfirmDialog"
+              class="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100"
+            >
+              Delete Customer
+            </button>
+            <router-link
+              to="/customers"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Back to Customers
+            </router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -254,6 +277,13 @@ const updateCustomer = async () => {
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
+                <router-link
+                  :to="`/tickets/${ticket.id}/edit`"
+                  class="text-amber-600 hover:text-amber-900"
+                >
+                  Edit
+                </router-link>
+                <span class="text-gray-300">|</span>
                 <button
                   @click="recordPayment(ticket.id)"
                   :disabled="ticket.status === 'Closed'"
@@ -366,5 +396,15 @@ const updateCustomer = async () => {
     confirmText="Yes, Close Ticket"
     cancelText="Cancel"
     @confirm="closeTicket"
+  />
+
+  <!-- Delete Customer Confirmation Dialog -->
+  <ConfirmDialog
+    v-model:show="showDeleteConfirmDialog"
+    title="Delete Customer"
+    :message="`Are you sure you want to delete ${customer?.name}? This will permanently delete the customer, all their tickets, and all payment records. This action cannot be undone.`"
+    confirmText="Yes, Delete Customer"
+    cancelText="Cancel"
+    @confirm="deleteCustomer"
   />
 </template>
