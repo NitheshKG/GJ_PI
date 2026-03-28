@@ -50,11 +50,13 @@ const formatDate = (dateString) => {
 
 const startEditPayment = (payment) => {
   editingPaymentId.value = payment.id
+  // Extract date part (YYYY-MM-DD) from ISO datetime string
+  const dateStr = payment.date ? payment.date.split('T')[0] : new Date().toISOString().split('T')[0]
   editForm.value = {
     interestPaid: payment.interestPaid,
     principalPaid: payment.principalPaid,
     monthsPaid: payment.monthsPaid,
-    date: payment.date
+    date: dateStr
   }
 }
 
@@ -68,7 +70,8 @@ const savePayment = async (paymentId) => {
     const updateData = {
       interestPaid: parseFloat(editForm.value.interestPaid) || 0,
       principalPaid: parseFloat(editForm.value.principalPaid) || 0,
-      monthsPaid: parseFloat(editForm.value.monthsPaid) || 0
+      monthsPaid: parseFloat(editForm.value.monthsPaid) || 0,
+      date: editForm.value.date
     }
 
     await axios.put(`${API_URL}/api/payments/${paymentId}`, updateData)
@@ -217,10 +220,9 @@ const deletePayment = async (paymentId) => {
               <tr v-for="payment in payments" :key="payment.id" :class="editingPaymentId === payment.id ? 'bg-blue-50' : 'hover:bg-gray-50'">
                 <td v-if="editingPaymentId === payment.id" class="px-6 py-4 whitespace-nowrap text-sm">
                   <input 
-                    type="text" 
+                    type="date" 
                     v-model="editForm.date" 
-                    class="border border-gray-300 rounded px-2 py-1 text-sm w-full"
-                    disabled
+                    class="border border-gray-300 rounded px-2 py-1 text-sm w-32"
                   />
                 </td>
                 <td v-else class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

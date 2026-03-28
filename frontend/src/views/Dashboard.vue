@@ -15,6 +15,9 @@ const showConfirmDialog = ref(false)
 const selectedTicketId = ref(null)
 const selectedTicketName = ref('')
 
+// Search
+const searchQuery = ref('')
+
 // Pagination
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
@@ -27,9 +30,36 @@ onMounted(() => {
   ticketStore.fetchTickets()
 })
 
+// Filtered tickets based on search query
+const filteredTickets = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim()
+  
+  if (!query) {
+    return ticketStore.tickets
+  }
+  
+  return ticketStore.tickets.filter(ticket => {
+    // Search across multiple fields - customer name, bill number, item name
+    const customerName = ((ticket.name || ticket.customerName || '') + '').toLowerCase()
+    const billNumber = ((ticket.billNumber || '') + '').toLowerCase()
+    const articleName = ((ticket.articleName || '') + '').toLowerCase()
+    const itemType = ((ticket.itemType || '') + '').toLowerCase()
+    const grossWeight = ((ticket.grossWeight || '') + '').toLowerCase()
+    
+    // Check if query matches any field
+    return (
+      customerName.includes(query) ||
+      billNumber.includes(query) ||
+      articleName.includes(query) ||
+      itemType.includes(query) ||
+      grossWeight.includes(query)
+    )
+  })
+})
+
 // Sorting computed property
 const sortedTickets = computed(() => {
-  const tickets = [...ticketStore.tickets]
+  const tickets = [...filteredTickets.value]
   
   tickets.sort((a, b) => {
     let aValue = a[sortBy.value]
@@ -154,6 +184,11 @@ const toggleSort = (column) => {
   currentPage.value = 1
 }
 
+const clearSearch = () => {
+  searchQuery.value = ''
+  currentPage.value = 1
+}
+
 const getSortIcon = (column) => {
   if (sortBy.value !== column) return '⇅'
   return sortOrder.value === 'asc' ? '↑' : '↓'
@@ -179,11 +214,41 @@ const getSortIcon = (column) => {
     </div>
 
     <div class="border-t border-gray-200">
+      <!-- Search Bar -->
+      <div class="px-4 py-4 sm:px-6 bg-gray-50 border-b border-gray-200">
+        <div class="flex flex-col sm:flex-row gap-2">
+          <div class="flex-1">
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search by customer name, bill number, item, type or weight..."
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <button
+            v-if="searchQuery"
+            @click="clearSearch"
+            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm font-medium"
+          >
+            Clear Search
+          </button>
+        </div>
+        <p v-if="searchQuery" class="mt-2 text-sm text-gray-600">
+          Found {{ filteredTickets.length }} ticket{{ filteredTickets.length !== 1 ? 's' : '' }} matching "{{ searchQuery }}"
+        </p>
+      </div>
+      
       <div v-if="ticketStore.loading" class="p-4 text-center text-gray-500">
         Loading...
       </div>
-      <div v-else-if="ticketStore.tickets.length === 0" class="p-4 text-center text-gray-500">
-        No tickets found.
+      <div v-else-if="filteredTickets.length === 0" class="p-4 text-center text-gray-500">
+        <p v-if="searchQuery">No tickets found matching your search.</p>
+        <p v-else>No tickets found.</p>
       </div>
       <div v-else>
         <div class="overflow-x-auto">

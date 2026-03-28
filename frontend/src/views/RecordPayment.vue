@@ -12,7 +12,8 @@ const router = useRouter()
 const form = ref({
   interestPaid: 0,
   principalPaid: 0,
-  monthsPaid: 1
+  monthsPaid: 1,
+  date: '' // Date is mandatory - must be provided by user
 })
 
 onMounted(async () => {
@@ -58,6 +59,12 @@ watch(() => form.value.monthsPaid, () => {
 })
 
 const submitPayment = async () => {
+  // Validate that date is provided
+  if (!form.value.date) {
+    notificationStore.addNotification('Please select a payment date', 'warning', 3000)
+    return
+  }
+  
   // Validate that at least one payment type is provided
   if (form.value.interestPaid <= 0 && form.value.principalPaid <= 0) {
     notificationStore.addNotification('Please enter either interest amount or principal amount (or both)', 'warning', 3000)
@@ -127,6 +134,14 @@ const submitPayment = async () => {
               >
             </div>
             <p class="mt-1 text-xs text-gray-500">This will reduce the pending principal</p>
+          </div>
+
+          <div>
+            <label for="date" class="block text-sm font-medium text-gray-700">Payment Date <span class="text-red-500">*</span></label>
+            <div class="mt-1">
+              <input type="date" name="date" id="date" v-model="form.date" required class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+            </div>
+            <p class="mt-1 text-xs text-gray-500">Date when the payment was received (required)</p>
           </div>
         </div>
 
