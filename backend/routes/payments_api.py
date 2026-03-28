@@ -56,6 +56,9 @@ def edit_payment(payment_id):
             date_value = data.get('date')
             if not date_value:
                 return jsonify({'error': 'Payment date is required'}), 400
+            # Ensure only date is stored, no time component
+            if 'T' in date_value:
+                date_value = date_value.split('T')[0]
             update_data['date'] = date_value
         
         if not update_data:

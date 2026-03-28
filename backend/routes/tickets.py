@@ -281,10 +281,11 @@ def add_payment(ticket_id):
         new_pending_principal = current_pending_principal - principal_paid
         
         current_datetime = datetime.now().isoformat()
+        # Store only date (YYYY-MM-DD format), no time component
         if payment_date:
-            payment_datetime = f"{payment_date}T{datetime.now().strftime('%H:%M:%S')}"
+            payment_datetime = payment_date
         else:
-            payment_datetime = current_datetime
+            payment_datetime = current_datetime.split('T')[0]
         
         # Get customer name from customer document
         customer_id = ticket_data.get('customerId')
@@ -317,13 +318,20 @@ def add_payment(ticket_id):
         current_total_interest = ticket_data.get('totalInterestReceived', 0)
         current_total_months = ticket_data.get('interestReceivedMonths', 0)
         
-        # Update ticket with new values
-        ticket_ref.update({
+        # Prepare update data
+        update_data = {
             'pendingPrincipal': new_pending_principal,
             'totalInterestReceived': current_total_interest + interest_paid,
             'interestReceivedMonths': current_total_months + months_paid,
             'lastPaymentDate': current_datetime
-        })
+        }
+        
+        # If pending principal is now 0, also set interest pending months to 0
+        if new_pending_principal == 0:
+            update_data['interestPendingMonths'] = 0
+        
+        # Update ticket with new values
+        ticket_ref.update(update_data)
         
         return jsonify({'message': 'Payment recorded successfully', 'newPendingPrincipal': new_pending_principal}), 200
         

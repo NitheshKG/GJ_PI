@@ -21,10 +21,16 @@ def close_ticket(ticket_id):
         if ticket_data.get('status') != 'Active':
             return jsonify({'message': 'Ticket is already closed'}), 200
         
-        # Update ticket status and close date
+        # Validate that pending principal is 0
+        pending_principal = ticket_data.get('pendingPrincipal', 0)
+        if pending_principal != 0:
+            return jsonify({'error': f'Cannot close ticket. Pending principal must be 0. Current pending: ₹{pending_principal}'}), 400
+        
+        # Update ticket status, close date, and set interest pending months to 0
         ticket_ref.update({
             'status': 'Closed',
-            'closeDate': datetime.now().isoformat()
+            'closeDate': datetime.now().isoformat(),
+            'interestPendingMonths': 0
         })
         
         # Update customer stats
