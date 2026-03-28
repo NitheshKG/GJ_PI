@@ -138,10 +138,19 @@ const navigateToPay = (id) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString()
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  } catch {
+    return '-'
+  }
 }
 
 const calculatePendingMonths = (ticket) => {
+  // For closed tickets, pending months is always 0
+  if (ticket.status === 'Closed') {
+    return 0
+  }
   // Interest Pending Months = (current month - start month) - interest received months
   const totalElapsedMonths = ticket.interestPendingMonths || 0
   const receivedMonths = ticket.interestReceivedMonths || 0
@@ -149,7 +158,8 @@ const calculatePendingMonths = (ticket) => {
 }
 
 const canCloseTicket = (ticket) => {
-  return calculatePendingMonths(ticket) === 0 && ticket.pendingPrincipal === 0
+  // Ticket can only be closed when pending principal is 0
+  return ticket.pendingPrincipal === 0
 }
 
 const openCloseDialog = (ticket) => {

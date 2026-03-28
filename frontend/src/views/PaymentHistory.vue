@@ -45,7 +45,12 @@ const formatDateTime = (dateString) => {
 
 const formatDate = (dateString) => {
   if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString('en-IN', { dateStyle: 'medium' })
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  } catch {
+    return '-'
+  }
 }
 
 const startEditPayment = (payment) => {
@@ -104,6 +109,31 @@ const deletePayment = async (paymentId) => {
     notificationStore.addNotification(`Failed to delete payment: ${errorMessage}`, 'error', 3000)
   }
 }
+
+const canCloseTicket = computed(() => {
+  return ticket.value && ticket.value.pendingPrincipal === 0
+})
+
+const closeTicket = async () => {
+  if (!confirm('Close this ticket? This action cannot be undone.')) {
+    return
+  }
+  
+  try {
+    await axios.put(`${API_URL}/api/tickets/${route.params.id}/close`)
+    notificationStore.addNotification('Ticket closed successfully!', 'success', 3000)
+    // Refresh both current ticket and all tickets in the store
+    await ticketStore.fetchTicket(route.params.id)
+    await ticketStore.fetchTickets()
+    // Navigate back to dashboard after a brief delay
+    setTimeout(() => {
+      router.push('/')
+    }, 1500)
+  } catch (error) {
+    const errorMessage = error.response?.data?.error || error.message
+    notificationStore.addNotification(`Failed to close ticket: ${errorMessage}`, 'error', 3000)
+  }
+}
 </script>
 
 <template>
@@ -111,16 +141,25 @@ const deletePayment = async (paymentId) => {
     <!-- Header -->
     <div class="bg-white shadow sm:rounded-lg">
       <div class="px-4 py-5 sm:px-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-4">
           <div>
             <h3 class="text-lg leading-6 font-medium text-gray-900">Payment History</h3>
           </div>
-          <router-link 
-            to="/" 
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-          >
-            Back to Dashboard
-          </router-link>
+          <div class="flex gap-3">
+            <button
+              v-if="canCloseTicket && ticket && ticket.status === 'Active'"
+              @click="closeTicket"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+            >
+              Close Ticket
+            </button>
+            <router-link 
+              to="/" 
+              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              Back to Dashboard
+            </router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -230,7 +269,7 @@ const deletePayment = async (paymentId) => {
                   />
                 </td>
                 <td v-else class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ formatDateTime(payment.date) }}
+                  {{ formatDate(payment.date) }}
                 </td>
                 <td v-if="editingPaymentId === payment.id" class="px-6 py-4 whitespace-nowrap text-sm">
                   <input 

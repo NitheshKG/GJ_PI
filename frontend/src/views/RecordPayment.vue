@@ -73,9 +73,18 @@ const submitPayment = async () => {
   
   try {
     await ticketStore.addPayment(route.params.id, form.value)
-    // Redirect immediately and show notification on dashboard
-    router.push('/')
-    notificationStore.addNotification('Payment recorded successfully!', 'success', 3000)
+    
+    // Check if pending principal is now 0
+    const updatedTicket = ticketStore.currentTicket
+    if (updatedTicket.pendingPrincipal === 0) {
+      notificationStore.addNotification('Payment recorded! Principal is now fully paid. You can now close the ticket.', 'success', 4000)
+      // Redirect to payment history to show close ticket option
+      router.push(`/tickets/${route.params.id}/payments`)
+    } else {
+      notificationStore.addNotification('Payment recorded successfully!', 'success', 3000)
+      // Redirect to dashboard
+      router.push('/')
+    }
   } catch (e) {
     notificationStore.addNotification(`Failed to record payment: ${e.message}`, 'error', 3000)
   }

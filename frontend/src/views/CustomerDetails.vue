@@ -67,7 +67,12 @@ const fetchTickets = async () => {
 
 const formatDate = (dateString) => {
   if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString()
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  } catch {
+    return '-'
+  }
 }
 
 const recordPayment = (ticketId) => {

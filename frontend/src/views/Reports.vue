@@ -478,7 +478,7 @@ const exportOutstandingLoans = async () => {
               <tbody class="divide-y divide-gray-200 bg-white">
                 <tr v-for="payment in monthlyReport.payments" :key="payment.id">
                   <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">
-                    {{ new Date(payment.date).toLocaleDateString() }}
+                    {{ new Date(payment.date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) }}
                   </td>
                   <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">{{ payment.customerName }}</td>
                   <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">{{ payment.billNumber || '-' }}</td>
@@ -569,7 +569,7 @@ const exportOutstandingLoans = async () => {
                     {{ ticket.interestPercentage }}%
                   </td>
                   <td class="whitespace-nowrap px-2 sm:px-3 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">
-                    {{ new Date(ticket.startDate).toLocaleDateString() }}
+                    {{ new Date(ticket.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) }}
                   </td>
                 </tr>
               </tbody>
