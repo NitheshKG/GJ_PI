@@ -139,6 +139,10 @@ const deletePayment = async (paymentId) => {
             <dd class="mt-1 text-sm font-bold text-gray-900">{{ ticket.articleName }}</dd>
           </div>
           <div>
+            <dt class="text-sm font-medium text-gray-500">Bill Number</dt>
+            <dd class="mt-1 text-sm font-semibold text-gray-900">{{ ticket.billNumber || '-' }}</dd>
+          </div>
+          <div>
             <dt class="text-sm font-medium text-gray-500">Initial Principal</dt>
             <dd class="mt-1 text-sm text-gray-900">₹{{ ticket.principal?.toLocaleString() }}</dd>
           </div>
