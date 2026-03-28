@@ -274,11 +274,17 @@ def add_payment(ticket_id):
         interest_paid = float(data.get('interestPaid', 0))
         principal_paid = float(data.get('principalPaid', 0))
         months_paid = float(data.get('monthsPaid', 0))
+        payment_date = data.get('date')
+        if not payment_date:
+            return jsonify({'error': 'Payment date is required'}), 400
         
         new_pending_principal = current_pending_principal - principal_paid
         
-        # Current timestamp
         current_datetime = datetime.now().isoformat()
+        if payment_date:
+            payment_datetime = f"{payment_date}T{datetime.now().strftime('%H:%M:%S')}"
+        else:
+            payment_datetime = current_datetime
         
         # Get customer name from customer document
         customer_id = ticket_data.get('customerId')
@@ -294,11 +300,11 @@ def add_payment(ticket_id):
             'customerName': customer_name,  # Fetch from customer record
             'billNumber': ticket_data.get('billNumber', ''),  # Bill number from ticket
             'articleName': ticket_data.get('articleName', ''),  # Item/article name from ticket
-            'date': current_datetime,  # General payment date
+            'date': payment_datetime,  # Payment date from frontend or current datetime
             'interestPaid': interest_paid,
-            'interestReceivedAt': current_datetime if interest_paid > 0 else None,
+            'interestReceivedAt': payment_datetime if interest_paid > 0 else None,
             'principalPaid': principal_paid,
-            'principalReceivedAt': current_datetime if principal_paid > 0 else None,
+            'principalReceivedAt': payment_datetime if principal_paid > 0 else None,
             'monthsPaid': months_paid,
             'remainingPrincipal': new_pending_principal
         }

@@ -111,25 +111,6 @@ def get_customers():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@customers_bp.route('/<customer_id>', methods=['GET'])
-def get_customer(customer_id):
-    """Get customer details by ID."""
-    try:
-        db = get_db()
-        customer_ref = db.collection('customers').document(customer_id)
-        customer_doc = customer_ref.get()
-        
-        if not customer_doc.exists:
-            return jsonify({'error': 'Customer not found'}), 404
-        
-        customer = customer_doc.to_dict()
-        customer['id'] = customer_doc.id
-        
-        return jsonify(customer), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 @customers_bp.route('/<customer_id>/tickets', methods=['GET'])
 def get_customer_tickets(customer_id):
     """Get all tickets for a specific customer."""

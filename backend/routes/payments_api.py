@@ -53,7 +53,10 @@ def edit_payment(payment_id):
             update_data['monthsPaid'] = float(data.get('monthsPaid', 0))
         
         if 'date' in data:
-            update_data['date'] = data.get('date')
+            date_value = data.get('date')
+            if not date_value:
+                return jsonify({'error': 'Payment date is required'}), 400
+            update_data['date'] = date_value
         
         if not update_data:
             return jsonify({'error': 'No fields to update'}), 400
