@@ -177,7 +177,7 @@ def export_payment_report():
         writer = csv.writer(output)
         
         # Write header
-        writer.writerow(['Date', 'Customer Name', 'Type', 'Interest Paid (₹)', 'Principal Amount (₹)'])
+        writer.writerow(['Date', 'Bill Number', 'Customer Name', 'Type', 'Interest Paid (₹)', 'Principal Amount (₹)'])
         
         # Combine tickets (investments) and payments into transactions
         transactions = []
@@ -185,6 +185,7 @@ def export_payment_report():
         for ticket in filtered_tickets:
             transactions.append({
                 'date': ticket.get('startDate', ''),
+                'billNumber': ticket.get('billNumber', ''),
                 'customerName': ticket.get('name', ''),
                 'type': 'Invested',
                 'interestPaid': 0,
@@ -192,8 +193,22 @@ def export_payment_report():
             })
         
         for payment in filtered_payments:
+            # Get billNumber from payment, or fetch from ticket if not present
+            bill_number = payment.get('billNumber', '')
+            
+            # If billNumber is not in payment, try to get it from the associated ticket
+            if not bill_number and payment.get('ticketId'):
+                try:
+                    ticket_ref = db.collection('tickets').document(payment.get('ticketId'))
+                    ticket_doc = ticket_ref.get()
+                    if ticket_doc.exists:
+                        bill_number = ticket_doc.to_dict().get('billNumber', '')
+                except:
+                    pass  # Silently fail if ticket not found
+            
             transactions.append({
                 'date': payment.get('date', ''),
+                'billNumber': bill_number,
                 'customerName': payment.get('customerName', ''),
                 'type': 'Received',
                 'interestPaid': payment.get('interestPaid', 0),
@@ -207,6 +222,7 @@ def export_payment_report():
         for transaction in transactions:
             writer.writerow([
                 datetime.fromisoformat(transaction['date'].replace('Z', '+00:00')).strftime('%Y-%m-%d %H:%M:%S'),
+                transaction['billNumber'],
                 transaction['customerName'],
                 transaction['type'],
                 f"{transaction['interestPaid']:.2f}",
